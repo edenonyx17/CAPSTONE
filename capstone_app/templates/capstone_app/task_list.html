@@ -1,0 +1,131 @@
+<!-- Task list page template -->
+{% extends 'capstone_app/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Task List{% endblock %}
+
+{% block content %}
+    {% csrf_token %}  <!-- Hidden CSRF input for JS access if needed -->
+    <h2 class="mb-4">Your Tasks</h2>
+
+    <!-- Filter and sort form -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Status filter -->
+            <div class="col-md-3">
+                <label>Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <!-- Priority filter -->
+            <div class="col-md-3">
+                <label>Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All</option>
+                    <option value="low" {% if priority == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if priority == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if priority == 'high' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+            <!-- Category filter -->
+            <div class="col-md-3">
+                <label>Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All</option>
+                    <option value="work" {% if category == 'work' %}selected{% endif %}>Work</option>
+                    <option value="personal" {% if category == 'personal' %}selected{% endif %}>Personal</option>
+                    <option value="shopping" {% if category == 'shopping' %}selected{% endif %}>Shopping</option>
+                    <option value="other" {% if category == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <!-- Overdue filter -->
+            <div class="col-md-3">
+                <label>Overdue</label>
+                <select name="overdue" class="form-select">
+                    <option value="">No</option>
+                    <option value="yes" {% if overdue == 'yes' %}selected{% endif %}>Yes</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <!-- Sort options -->
+            <div class="col-md-3">
+                <label>Sort By</label>
+                <select name="sort" class="form-select">
+                    <option value="-date_created" {% if sort == '-date_created' %}selected{% endif %}>Newest First</option>
+                    <option value="date_created" {% if sort == 'date_created' %}selected{% endif %}>Oldest First</option>
+                    <option value="due_date" {% if sort == 'due_date' %}selected{% endif %}>Due Date Asc</option>
+                    <option value="-due_date" {% if sort == '-due_date' %}selected{% endif %}>Due Date Desc</option>
+                    <option value="priority" {% if sort == 'priority' %}selected{% endif %}>Priority Asc</option>
+                    <option value="-priority" {% if sort == '-priority' %}selected{% endif %}>Priority Desc</option>
+                </select>
+            </div>
+            <div class="col-md-3 mt-4">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Task table -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in page_obj %}
+                <!-- Highlight overdue tasks -->
+                <tr class="{% if task.is_overdue %}table-danger{% endif %}">
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.description | safe }}</td>  <!-- Render as HTML -->
+                    <td>{{ task.get_priority_display }}</td>
+                    <td>{{ task.get_category_display }}</td>
+                    <td>{% if task.due_date %}{{ task.due_date }}{% else %}None{% endif %}</td>
+                    <td class="task-status">{{ task.get_status_display }}</td>
+                    <td>
+                        <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                        <!-- AJAX toggle button -->
+                        <a href="{% url 'task_toggle_status' task.pk %}" class="btn btn-sm btn-info toggle-status">
+                            {% if task.status == 'pending' %}Mark Completed{% else %}Mark Pending{% endif %}
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7">No tasks match your filters.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1{% if status %}&status={{ status }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if overdue %}&overdue={{ overdue }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">&laquo; First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if overdue %}&overdue={{ overdue }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Previous</a></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if status %}&status={{ status }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if overdue %}&overdue={{ overdue }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ num }}</a></li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if overdue %}&overdue={{ overdue }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if overdue %}&overdue={{ overdue }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">Last &raquo;</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <footer class="bg-light text-center text-lg-start">
+        <div class='text-center p-3'>
+            &copy; 2025 Capstone App. All rights reserved.
+        </div>
+    </footer>
+{% endblock %}

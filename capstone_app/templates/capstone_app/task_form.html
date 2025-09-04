@@ -1,0 +1,101 @@
+<!-- Task create/update form template -->
+{% extends 'capstone_app/base.html' %}
+{% load django_bootstrap5 %}
+
+
+{% block title %}{{ action }} Task{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">{{ action }} Task</h2>
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.title.label_tag }}
+                            {{ form.title }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="editor">Description</label>
+                            <div id="editor" class="ql-editor" style="height: 200px;"></div>
+                            <input type="hidden" name='description' id='hiddenDescription' value="{{ form.description.value|safe }}">
+                        </div>
+                        <div class="mb-3">
+                            {{ form.due_date.label_tag }}
+                            {{ form.due_date }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.priority.label_tag }}
+                            {{ form.priority }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.category.label_tag }}
+                            {{ form.category }}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden template for initial description (avoids template tags in JS) -->
+    {% if form.description.value %}
+        <template id="initial-description">{{ form.description.value | safe }}</template>
+    {% endif %}
+
+    <script>
+        // Initialize Quill editor
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{'list': 'ordered'}, {'list': 'bullet'}]
+                ]
+            }
+        });
+
+        // Set initial content if editing
+        const initialDescElement = document.getElementById('initial-description');
+        if (initialDescElement) {
+            quill.root.innerHTML = initialDescElement.innerHTML;
+        }
+
+        // Hidden input
+        const hiddenDescription = document.getElementById('hiddenDescription');
+
+        // Sync content live
+        quill.on('text-change', function() {
+            hiddenDescription.value = quill.root.innerHTML;
+        });
+
+
+        // On submit, set hidden field with HTML content
+        document.querySelector('form').onsubmit = function() {
+            hiddenDescription.value = quill.root.innerHTML;
+        };
+    </script>
+{% endblock %}

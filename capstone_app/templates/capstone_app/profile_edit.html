@@ -1,0 +1,41 @@
+<!-- Profile edit template -->
+{% extends 'capstone_app/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Edit Profile</h2>
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'profile' %}">Back to Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
