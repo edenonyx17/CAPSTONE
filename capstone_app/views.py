@@ -115,6 +115,13 @@ def task_update(request, pk):
     form = TaskForm(instance=task)
   return render(request, 'capstone_app/task_form.html', {'form': form, 'action': 'Update'})
 
+# Task detail
+@login_required
+def task_detail(request, pk):
+  task = get_object_or_404(Task, pk=pk, user=request.user)
+  return render(request, 'capstone_app/task_detail.html', {'task': task})
+
+
 # Deleting task view
 @login_required
 def task_delete(request, pk):

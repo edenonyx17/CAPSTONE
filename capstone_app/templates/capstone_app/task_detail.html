@@ -1,0 +1,46 @@
+<!-- task_detail.html -->
+{% extends 'capstone_app/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block title %}Task Detail{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-3">{{ task.title }}</h2>
+
+                <!-- Task details in a stacked layout -->
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Description:</strong></p>
+                    <p class="text-break">{{ task.description|safe }}</p>
+                </div>
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Priority:</strong></p>
+                    <p>{{ task.get_priority_display }}</p>
+                </div>
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Category:</strong></p>
+                    <p>{{ task.get_category_display }}</p>
+                </div>
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Due Date:</strong></p>
+                    <p>{% if task.due_date %}{{ task.due_date|date:"Y-m-d" }}{% else %}None{% endif %}</p>
+                </div>
+                <div class="mb-3">
+                    <p class="mb-1"><strong>Status:</strong></p>
+                    <p>{{ task.get_status_display }}</p>
+                </div>
+
+                <!-- Action buttons with mobile-friendly sizing -->
+                <div class="d-grid gap-2">
+                    <a href="{% url 'task_update' task.pk %}" class="btn btn-warning btn-lg">Edit</a>
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger btn-lg">Delete</a>
+                    <a href="{% url 'task_toggle_status' task.pk %}" class="btn btn-info btn-lg">
+                        {% if task.status == 'pending' %}Mark Completed{% else %}Mark Pending{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

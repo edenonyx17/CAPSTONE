@@ -22,4 +22,6 @@ urlpatterns = [
   path('password_change/', views.change_password, name='password_change'),
   path('password_change/done/', views.change_password_done, name='password_change_done'),
   path('reminder/', views.reminder, name='reminder'),
+  path('tasks/<int:pk>/', views.task_detail, name='task_detail'),
+
 ]
