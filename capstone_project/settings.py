@@ -142,7 +142,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Redirects for login and logout
 LOGIN_REDIRECT_URL = '/tasks/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 
 # Email reset password
 #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
