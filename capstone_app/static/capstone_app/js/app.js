@@ -1,51 +1,60 @@
 // For reminders, notifications, and keyboard shortcuts
 
 // Function to get cookie (for CSRF if needed elsewhere)
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Reminders and Notifications
 function checkReminders() {
     const rows = document.querySelectorAll('tbody tr');
     rows.forEach(row => {
-        const dueCell = row.querySelector('td:nth-child(4)');
-        if (dueCell && dueCell.textContent !== 'None') {
-            const dueDateStr = dueCell.textContent;
+        const statusCell = row.querySelector('.task-status');
+        const dueCell = row.querySelector('td:nth-child(5)');  // Adjust index if needed
+        const titleCell = row.querySelector('td:nth-child(1)');
+        const taskPk = row.getAttribute('data-task-pk');
+
+        if (statusCell && statusCell.textContent.trim() === 'Pending' && dueCell && dueCell.textContent.trim() !== 'None') {
+            const dueDateStr = dueCell.textContent.trim();
             const dueDate = new Date(dueDateStr);
             const now = new Date();
-            if (dueDate > now) {
-                const timeDiff = dueDate - now;
+
+            if (isNaN(dueDate.getTime())) {
+                console.error(`Invalid due date for task "${titleCell.textContent.trim()}": ${dueDateStr}`);
+                return;
+            }
+
+            const timeDiff = dueDate - now;
+            const title = titleCell.textContent.trim();
+
+            if (timeDiff <= 0) {
+                notifyUser(title, '⚠️ Your task is overdue!', taskPk);
+            } else {
                 setTimeout(() => {
-                    const title = row.querySelector('td:nth-child(1)').textContent;
-                    if (Notification.permission === 'granted') {
-                        new Notification('Task Due Reminder', { body: `Your task "${title}" is due now!` });
-                    } else if (Notification.permission !== 'denied') {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === 'granted') {
-                                new Notification('Task Due Reminder', { body: `Your task "${title}" is due now!` });
-                            } else {
-                                alert(`Task Due: ${title}`);
-                            }
-                        });
-                    } else {
-                        alert(`Task Due: ${title}`);
-                    }
+                    notifyUser(title, '⏰ Your task is due now!', taskPk);
                 }, timeDiff);
             }
         }
     });
+}
+
+
+// Helper to send notification or alert
+function notifyUser(title, message, taskPk) {
+    if (Notification.permission === 'granted') {
+        const notification = new Notification('Task Reminder', { body: `${message} - ${title}` });
+        notification.onclick = function () {
+            window.open(`/tasks/${taskPk}/update/`, '_blank');
+        };
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                const notification = new Notification('Task Reminder', { body: `${message} - ${title}` });
+                notification.onclick = function () {
+                    window.open(`/tasks/${taskPk}/update/`, '_blank');
+                };
+            } else {
+                alert(`${message} - ${title}`);
+            }
+        });
+    } else {
+        alert(`${message} - ${title}`);
+    }
 }
 
 // Keyboard Shortcuts
@@ -58,7 +67,7 @@ document.addEventListener('keydown', (e) => {
         // Mark first pending task as done (simple implementation)
         const firstPending = document.querySelector('tr .task-status[textContent="Pending"] ~ td .toggle-status');
         if (firstPending) {
-            firstPending.click();
+            firstPending.click();  // Simulate click on toggle
         } else {
             alert('No pending tasks to mark as done.');
         }
@@ -66,4 +75,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Run on load
-window.addEventListener('load', checkReminders);
+window.addEventListener('load', () => {
+    // Request permission early
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+    checkReminders();
+});

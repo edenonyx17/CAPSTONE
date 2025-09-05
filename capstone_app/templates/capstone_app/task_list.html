@@ -1,6 +1,8 @@
 <!-- Task list page template -->
 {% extends 'capstone_app/base.html' %}
+{% load static %}
 {% load django_bootstrap5 %}
+
 
 {% block title %}Task List{% endblock %}
 
@@ -85,12 +87,12 @@
         <tbody>
             {% for task in page_obj %}
                 <!-- Highlight overdue tasks -->
-                <tr class="{% if task.is_overdue %}table-danger{% endif %}">
+                <tr class="{% if task.is_overdue %}table-danger{% endif %}" data-task-pk="{{ task.pk }}">
                     <td>{{ task.title }}</td>
                     <td>{{ task.description | safe }}</td>  <!-- Render as HTML -->
                     <td>{{ task.get_priority_display }}</td>
                     <td>{{ task.get_category_display }}</td>
-                    <td>{% if task.due_date %}{{ task.due_date }}{% else %}None{% endif %}</td>
+                    <td>{% if task.due_date %}{{ task.due_date | date:"Y-m-d"}}{% else %}None{% endif %}</td>
                     <td class="task-status">{{ task.get_status_display }}</td>
                     <td>
                         <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-warning">Edit</a>
